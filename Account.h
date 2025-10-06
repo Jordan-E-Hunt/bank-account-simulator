@@ -2,6 +2,7 @@
 #define CLASS_Account_
 
 #include <string>
+#include <mutex> //Mutexing
 using namespace std;
 
 class Account
@@ -10,6 +11,7 @@ class Account
       double balance;            // account balance
       string number;             // account number
       bool below50Indicator;
+      mutex balance_mutex;
 
    public:
       Account(double, string);

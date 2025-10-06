@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <mutex> //Mutexing
 using namespace std;
 
 const int MINIMUM = 50;
@@ -38,6 +39,8 @@ bool Account::balanceBelow50()
 
 void Account::deposit(double amount)
 {
+	lock_guard<mutex> lock(balance_mutex);
+	
 	if(amount >= 0)
 		balance = amount + balance;
 	else
@@ -49,13 +52,19 @@ void Account::deposit(double amount)
 
 void Account::withdraw(double amount)
 {
+	lock_guard<mutex> lock(balance_mutex);
+	
 	if(amount >= 0)
 	{
 		if(balance - amount >= 0)
+		{
 			balance = balance - amount;
 			
-		if(balance < MINIMUM)
-			below50Indicator = true;
+			if(balance < MINIMUM)
+				below50Indicator = true;
+		}
+		else
+			cout << "Imsufficient funds!" << endl;
 	}
 	else
 		cout << "Only positive numbers can be entered!" << endl;

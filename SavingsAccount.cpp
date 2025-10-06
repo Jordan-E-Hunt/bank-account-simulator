@@ -30,9 +30,11 @@ void SavingsAccount::display()
 
 void SavingsAccount::deposit(double amount)
 {
+	lock_guard<mutex> lock(balance_mutex);
+	
 	if(amount >= 0)
 	{
-		amount = amount + (getBalance() * rate);
+		amount += (getBalance() * rate);
 		balance += amount;
 	}
 	else
