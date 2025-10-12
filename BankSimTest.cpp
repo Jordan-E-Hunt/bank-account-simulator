@@ -9,6 +9,7 @@
 #include <iostream>    // for input/output
 #include <cstdlib>
 #include <iomanip>    // for output format
+#include <thread>
 #include "Account.h"
 #include "CheckingAccount.h"
 #include "SavingsAccount.h"
@@ -16,9 +17,10 @@
 using namespace std;
 // =============== symbolic constants ==============================
 const int DECIMAL = 2;
-const int WIDTH = 5;
-const int NEG = -1;
-const int ADD = 1;
+const int NUM_TRANSACTIONS_PER_THREAD = 1000;
+const double TRANSACTION_AMOUNT = 10.00;
+const int SIMULATED_THREADS_NUM = 10;
+const double INIT_BALANCE = 600.00;
 // ================== data type declarations =======================
 int accountSize = 0;
 int i, counter;
@@ -30,194 +32,53 @@ bool balDub, minDub, rateFlo, typeChar, numStr, act, prevAcc, repeat;
 // =================== function prototype ==========================
 void sortArray(Account** list, int listSize);
 
+void transaction_thread(Account* acc_ptr, int transactions);
+
 // this program contains variable declaration statements
 // and assignment statements
 
 int main()
 {
-   // data declarations
    system("clear");
-   
-   cout << "How many accounts would you like? (Enter a positive integer) ";
-   cin >> accountSize;
-   
-   Account *accountStack[accountSize];
-   prevAcc = false;
    cout << fixed << showpoint << setprecision(DECIMAL);
-   string* accNames = new string[ADD];
-   string *newAccNames;
-   counter = ADD;
-	
-	for (i = 0; i < accountSize; ++i)
-	{
-		accountType = '\0';
-		amount = NEG;
-		balance = NEG;
-		rate = NEG;
-		minimum_balance = NEG;
-		minDub = false;
-		rateFlo = false;
-		balDub = false;
-		typeChar = false;
-		act = false;
-		numStr = false;
-		repeat = false;
-		
-		if (prevAcc)
-			cout << endl << "Next account..." << endl;
-			
-		cout << "What is the account balance? (Enter a positive integer) ";
-	   
-	   while(!balDub)
-	   {
-			cin >> balance;
-			if (balance >= 0)
-					balDub = true;
-				else
-					cout << "Invalid account balance. Try again. ";
-		}
-				
-		   cout << "What is the account number? ";
-		
-		while(!numStr || repeat)
-		{
-			repeat = false;
-			cin >> number;
-			if(prevAcc)
-			{
-				for (int j = 0; j < counter; ++j)
-				{
-					if(number == accNames[j])
-					{
-						repeat = true;
-						cout << "Account name " << accNames[j] 
-						<< " already in use!" 
-						<< endl << "Please enter new account number! ";
-					}
-				}
-				if(!repeat)
-				{
-					++counter;
-					newAccNames = new string[counter];
-					for (int j = 0; j < counter - 1; ++j)
-					{
-						newAccNames[j] = accNames[j];
-					}
-					delete[] accNames;
-					accNames = newAccNames;
-					accNames[counter - 1] = number;
-				}
-			}
-			else
-				*accNames = number;
-			numStr = true;
-		}
-		
-		 cout << "What is the account type? (S - Savings, C - Checking) ";
-		 while (!typeChar)  
-		 {
-			cin >> accountType;
-		   
-		   if(toupper(accountType) == 'S' || toupper(accountType) == 'C')
-			typeChar = true;
-		   else
-			cout << "Invalid Account Type. Try again. ";
-	   }
-	   
-	   if (toupper(accountType) == 'S')
-	   {
-		   cout << "What is the percent interest rate on the Savings Account? (Enter as decimal)";
-		   
-		   while (!rateFlo)
-		   {
-			   cin >> rate;
-			   if (0 <= rate && rate <= 1)
-					rateFlo = true;
-				else
-					cout << "Invalid rate. Try again. ";
-			}
-			accountStack[i] = new SavingsAccount(balance, number, rate);
-		}
-		
-		if (toupper(accountType) == 'C')
-		{
-		   cout << "What is the minimum balance on the Checking Account? ";
-		   while (!minDub)
-		   {
-			   cin >> minimum_balance;
-			   if (0 <= minimum_balance)
-					minDub = true;
-				else
-					cout << "Invalid minimum. Try again. ";
-			}
-			accountStack[i] = new CheckingAccount(balance, number, minimum_balance);
-		}
-		
-		cout << "Which action would you like to take?" 
-		<< endl << "(W - Withdraw, D - Deposit)  ";
-		
-		while(!act)
-		{
-			cin >> action;
-			
-			if(toupper(action) == 'D')
-			{
-				cout << "How much would you like to deposit? ";
-				while(amount <= 0)
-				{
-					cin >> amount;
-					if (amount <= 0)
-						cout << "Invalid amount. Try again. ";
-				}
-				accountStack[i]->deposit(amount);
-				act = true;
-			}
-			
-			else if(toupper(action) == 'W')
-			{
-				cout << "How much would you like to withdraw? ";
-				while(amount < 0 || accountStack[i]->getBalance() - amount < 0)
-				{
-					cin >> amount;
-					if (accountStack[i]->getBalance() - amount < 0)
-						cout << "Invalid amount. Try again. ";
-				
-					if(amount < 0)
-					{
-						amount = NEG;
-						cout << "Only positive numbers can be entered! Try again. ";
-					}
-				}
-				accountStack[i]->withdraw(amount);
-				act = true;
-			}
-			else
-				cout << "Invalid action. Try again. ";
-		}
-		prevAcc = true;
-	}
-   sortArray(accountStack, accountSize);
-   
-   for (i = 0; i < accountSize; ++i)
-   {
-		accountStack[i]->display();
-	}
-	
-	cout << "Accounting was completed." << endl;
+
+   SavingsAccount sharedAccount(INITIAL_BALANCE, "THREAD_TEST", 0.05);
+
+   cout << "--- Multi-threaded Account Simulation ---" << endl
+   << "Initial Balance: $" << sharedAccount.getBalance() << endl
+   << "Beginnning " << SIMULATED_THREADS_NUM << " threads..." << endl;
+
+   thread* threadArray = new thread[SIMULATED_THREADS_NUM];
+
+   for (int i = 0; i < SIMULATED_THREADS_NUM; ++i) {
+	threadArray[i] = thread(transaction_thread, &sharedAccount, NUM_TRANSACTIONS_PER_THREAD);
+   }
+
+   for (int i = 0; i < SIMULATED_THREADS_NUM; ++i) {
+	if (threadArray[i].joinable())
+		thread[i].join();
+   }
+
+   delete[] threadArray;
+
+   cout << "All threads completed and memory cleaned." << endl
+   << "-----------------------------------" << endl
+   << "Final Balance: $" << sharedAccount.getBalance() << endl
+   << "-----------------------------------" << endl;
+
    return 0;
 }// end main
-//datatype functionName()
-// Purpose:
-// Precondition:
-// Postcondition:
-//{
-//}// end
-//void functionName()
-// Purpose:
-// Precondition:
-// Postcondition:
-//{
-//}// end
+void transaction_thread(Account* acc_ptr, int transactions)
+// Purpose: Runs transactions and withdrawls through threads
+// Precondition: Address of Account Object and number of intended deposits and withdrawls
+// Postcondition: Performs number of transactions on the account
+{
+   Account& acc = *act_ptr;
+   for (int i = 0; i < transactions; ++i) {
+	acc.deposit(TRANSACTION_AMOUNT);
+	acc.withdraw(TRANSACTION_AMOUNT / 2.0);
+   }
+}// end
 void sortArray(Account** list, int listSize)
 // Purpose:
 // Precondition:
