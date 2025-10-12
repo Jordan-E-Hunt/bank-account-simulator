@@ -44,8 +44,7 @@ void Account::deposit(double amount)
 	if(amount >= 0)
 		balance = amount + balance;
 	else
-		cout << "Only positive numbers can be entered!"
-		<< endl;
+		throw runtime_error("Deposit failed: Positive Values Only");
 	if(balance >= MINIMUM)
 		below50Indicator = false;
 }
@@ -64,8 +63,8 @@ void Account::withdraw(double amount)
 				below50Indicator = true;
 		}
 		else
-			cout << "Imsufficient funds!" << endl;
+			throw runtime_error("Imsufficient funds!");
 	}
 	else
-		cout << "Only positive numbers can be entered!" << endl;
+		throw invalid_argument("Only positive numbers can be entered!");
 }

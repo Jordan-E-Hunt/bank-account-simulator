@@ -36,9 +36,12 @@
 *.exe
 *.out
 *.app
+Assign6
 
 # debug information files
 *.dwo
 
 #Other
 template.cpp
+Assign6.dat
+

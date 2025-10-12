@@ -38,8 +38,7 @@ void SavingsAccount::deposit(double amount)
 		balance += amount;
 	}
 	else
-		cout << "Only positive numbers can be entered!"
-		<< endl;
+		throw runtime_error("Only positive numbers can be entered!");
 	if(balance >= MINIMUM)
 		below50Indicator = false;
 }
